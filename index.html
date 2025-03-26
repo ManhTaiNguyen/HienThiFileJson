@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hiển thị JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #svgContainer {
+            border: 1px solid black;
+            width: 1000px;
+            height: 500px;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <a>Nhập file JSON: </a><input type="file" id="fileInput" accept=".json">
+    <svg id="svgContainer" width="1000" height="500">
+        <defs>
+            <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2"
+                orient="auto" markerUnits="strokeWidth">
+                <polygon points="0 0, 4 2, 0 4" fill="#5b9bd5"/>
+            </marker>
+        </defs>
+    </svg>
+
+    <script>
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const jsonData = JSON.parse(e.target.result);
+                drawFromJson(jsonData);
+            };
+            reader.readAsText(file);
+        });
+
+        function drawFromJson(data) {
+            const svg = document.getElementById("svgContainer");
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2"
+                        orient="auto" markerUnits="strokeWidth">
+                        <polygon points="0 0, 4 2, 0 4" fill="#5b9bd5"/>
+                    </marker>
+                </defs>
+            `;
+
+            data.forEach(slide => {
+                slide.elements.forEach(element => {
+                    drawElement(svg, element);
+                });
+            });
+        }
+
+        function drawElement(svg, element) {
+            let shape;
+
+            if (element.type === "shape") {
+                shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                shape.setAttribute("d", element.path);
+                shape.setAttribute("fill", element.fill || "#000");
+                shape.setAttribute("opacity", element.opacity || 1);
+
+                let scaleX = element.width / (element.viewBox ? element.viewBox[0] : 200);
+                let scaleY = element.height / (element.viewBox ? element.viewBox[1] : 200);
+                let transform = `translate(${element.left},${element.top}) scale(${scaleX}, ${scaleY})`;
+
+                if (element.flipV) {
+                    transform = `translate(${element.left},${element.top + element.height}) scale(${scaleX}, ${-scaleY})`;
+                }
+
+                shape.setAttribute("transform", transform);
+            } 
+            else if (element.type === "line") {
+                shape = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                shape.setAttribute("x1", element.left + (element.start ? element.start[0] : 0));
+                shape.setAttribute("y1", element.top + (element.start ? element.start[1] : 0));
+                shape.setAttribute("x2", element.left + element.end[0]);
+                shape.setAttribute("y2", element.top + element.end[1]);
+                shape.setAttribute("stroke", element.color || "#5b9bd5");
+                shape.setAttribute("stroke-width", element.width || 2);
+                shape.setAttribute("stroke-dasharray", element.style === "dashed" ? "5,5" : "");
+
+                if (element.points && element.points.includes("arrow")) {
+                    shape.setAttribute("marker-end", "url(#arrowhead)");
+                }
+
+                svg.appendChild(shape);
+
+                if (element.points && element.points.includes("dot")) {
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", element.left + (element.start ? element.start[0] : 0));
+                    circle.setAttribute("cy", element.top + (element.start ? element.start[1] : 0));
+                    circle.setAttribute("r", 3);
+                    circle.setAttribute("fill", element.color || "#5b9bd5");
+                    svg.appendChild(circle);
+                }
+            } 
+            else if (element.type === "text") {
+                shape = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                shape.setAttribute("x", element.left);
+                shape.setAttribute("y", element.top);
+                shape.setAttribute("fill", element.defaultColor || "#000");
+                shape.setAttribute("font-size", "24px");
+                shape.innerHTML = element.content.replace(/<[^>]+>/g, "");
+            }
+
+            if (shape) {
+                svg.appendChild(shape);
+            }
+        }
+    </script>
+</body>
+</html>
