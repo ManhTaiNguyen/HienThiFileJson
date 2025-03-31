@@ -3,119 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hiển thị JSON</title>
+    <title>Trình Chiếu từ JSON</title>
     <style>
         body {
+            margin: 0;
+            padding: 10px;
             font-family: Arial, sans-serif;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
         }
-        #svgContainer {
-            border: 1px solid black;
-            width: 1000px;
-            height: 500px;
-            display: block;
-            margin: 20px auto;
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .slide-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            background-color: white;
+        }
+        
+        .slide {
+            position: relative;
+            width: 100%;
+            height: 560px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .shape {
+            position: absolute;
+        }
+        
+        .text-element {
+            position: absolute;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        
+        .line-element {
+            position: absolute;
+            background-color: #5b9bd5;
+        }
+        
+        .slide-navigation {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #5b9bd5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #4a8bc4;
+        }
+        
+        .triangle-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transform-origin: center;
+        }
+        
+        .triangle-text-container {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            opacity: inherit;
+        }
+        
+        .triangle-text p {
+            width: 10px;
+            height: 8px;
+            background-color: transparent;
+            cursor: pointer;
+            margin-top: 3px;
+            margin: 6px;
+            font-size: 100%;
+            line-height: 1.2;
+            padding: 10;
+            display: flex;
+            flex-direction: column
+        }
+        
+        #file-info {
+            margin-left: 10px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .line-element {
+            position: absolute;
+            transform-origin: 0 0;
+        }
+
+        .line-arrow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .line-dot {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .svg-line-container {
+            overflow: visible;
         }
     </style>
 </head>
 <body>
-    <a>Nhập file JSON: </a><input type="file" id="fileInput" accept=".json">
-    <svg id="svgContainer" width="1000" height="500">
-        <defs>
-            <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2"
-                orient="auto" markerUnits="strokeWidth">
-                <polygon points="0 0, 4 2, 0 4" fill="#5b9bd5"/>
-            </marker>
-        </defs>
-    </svg>
+    <div class="controls">
+        <input type="file" id="json-file" accept=".json">
+        <span id="file-info">Chưa có file nào được chọn</span>
+    </div>
+    
+    <div class="slide-container" id="slide-container">
+    </div>
 
     <script>
-        document.getElementById("fileInput").addEventListener("change", function(event) {
-            const file = event.target.files[0];
+        let currentSlides = [];
+        let currentSlideIndex = 0;
+        
+        // Xử lý khi chọn file
+        document.getElementById('json-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
             if (!file) return;
-
+            
+            document.getElementById('file-info').textContent = file.name;
+            
             const reader = new FileReader();
             reader.onload = function(e) {
-                const jsonData = JSON.parse(e.target.result);
-                drawFromJson(jsonData);
+                try {
+                    const slidesData = JSON.parse(e.target.result);
+                    loadSlides(slidesData);
+                } catch (error) {
+                    alert('Lỗi khi đọc file JSON: ' + error.message);
+                }
             };
             reader.readAsText(file);
         });
-
-        function drawFromJson(data) {
-            const svg = document.getElementById("svgContainer");
-            svg.innerHTML = `
-                <defs>
-                    <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2"
-                        orient="auto" markerUnits="strokeWidth">
-                        <polygon points="0 0, 4 2, 0 4" fill="#5b9bd5"/>
-                    </marker>
-                </defs>
-            `;
-
-            data.forEach(slide => {
-                slide.elements.forEach(element => {
-                    drawElement(svg, element);
-                });
+        
+        // Tải slides từ dữ liệu JSON
+        function loadSlides(slidesData) {
+            const container = document.getElementById('slide-container');
+            container.innerHTML = '';
+            currentSlides = [];
+            
+            if (!Array.isArray(slidesData)) {
+                alert('Dữ liệu JSON không hợp lệ');
+                return;
+            }
+            
+            slidesData.forEach((slideData, index) => {
+                const slide = createSlide(slideData, index);
+                container.appendChild(slide);
+                currentSlides.push(slide);
             });
+            
+            if (currentSlides.length > 0) {
+                showSlide(0);
+            }
+            
+            createNavigationButtons();
         }
-
-        function drawElement(svg, element) {
-            let shape;
-
-            if (element.type === "shape") {
-                shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                shape.setAttribute("d", element.path);
-                shape.setAttribute("fill", element.fill || "#000");
-                shape.setAttribute("opacity", element.opacity || 1);
-
-                let scaleX = element.width / (element.viewBox ? element.viewBox[0] : 200);
-                let scaleY = element.height / (element.viewBox ? element.viewBox[1] : 200);
-                let transform = `translate(${element.left},${element.top}) scale(${scaleX}, ${scaleY})`;
+        
+        function createSlide(slideData, index) {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            slide.id = `slide-${index}`;
+            
+            if (!slideData.elements || !Array.isArray(slideData.elements)) {
+                slide.innerHTML = '<p>Slide không có dữ liệu hợp lệ</p>';
+                return slide;
+            }
+            
+            if (slideData.background) {
+                if (slideData.background.type === 'solid') {
+                    slide.style.backgroundColor = slideData.background.color || '#ffffff';
+                }
+            }
+            
+            // Tạo các phần tử trong slide
+            slideData.elements.forEach(element => {
+                switch (element.type) {
+                    case 'shape':
+                        drawShape(element, slide);
+                        break;
+                    case 'text':
+                        createTextElement(element, slide);
+                        break;
+                    case 'line':
+                        drawLine(element, slide);
+                        break;
+                }
+            });
+            
+            return slide;
+        }
+        
+        function drawShape(element, slide) {
+            const shape = document.createElement('div');
+            shape.className = 'shape';
+            shape.style.left = `${element.left}px`;
+            shape.style.top = `${element.top}px`;
+            shape.style.width = `${element.width}px`;
+            shape.style.height = `${element.height}px`;
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', element.width);
+            svg.setAttribute('height', element.height);
+            svg.setAttribute('viewBox', `0 0 ${element.viewBox[0]} ${element.viewBox[1]}`);
+            svg.setAttribute('preserveAspectRatio', 'none');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', element.path);
+            path.setAttribute('fill', element.fill || '#5b9bd5');
+            path.setAttribute('opacity', element.opacity || 1);
+            
+            if (element.flipV) {
+                path.setAttribute('transform', 'scale(1,-1) translate(0,-200)');
+            }
+            
+            if (element.rotate) {
+                const centerX = element.width / 2;
+                const centerY = element.height / 2;
+                path.setAttribute('transform', `rotate(${element.rotate}, ${centerX}, ${centerY})`);
+            }
+            
+            svg.appendChild(path);
+            shape.appendChild(svg);
+            
+            // Thêm text nếu có
+            if (element.text && element.text.content) {
+                const textContainer = document.createElement('div');
+                textContainer.className = 'triangle-text-container';
+                
+                if (element.opacity !== undefined) {
+                    textContainer.style.opacity = element.opacity;
+                }
 
                 if (element.flipV) {
-                    transform = `translate(${element.left},${element.top + element.height}) scale(${scaleX}, ${-scaleY})`;
+                    textContainer.style.transform = 'scaleY(-1)';                
                 }
-
-                shape.setAttribute("transform", transform);
-            } 
-            else if (element.type === "line") {
-                shape = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                shape.setAttribute("x1", element.left + (element.start ? element.start[0] : 0));
-                shape.setAttribute("y1", element.top + (element.start ? element.start[1] : 0));
-                shape.setAttribute("x2", element.left + element.end[0]);
-                shape.setAttribute("y2", element.top + element.end[1]);
-                shape.setAttribute("stroke", element.color || "#5b9bd5");
-                shape.setAttribute("stroke-width", element.width || 2);
-                shape.setAttribute("stroke-dasharray", element.style === "dashed" ? "5,5" : "");
-
-                if (element.points && element.points.includes("arrow")) {
-                    shape.setAttribute("marker-end", "url(#arrowhead)");
-                }
-
-                svg.appendChild(shape);
-
-                if (element.points && element.points.includes("dot")) {
-                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute("cx", element.left + (element.start ? element.start[0] : 0));
-                    circle.setAttribute("cy", element.top + (element.start ? element.start[1] : 0));
-                    circle.setAttribute("r", 3);
-                    circle.setAttribute("fill", element.color || "#5b9bd5");
-                    svg.appendChild(circle);
-                }
-            } 
-            else if (element.type === "text") {
-                shape = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                shape.setAttribute("x", element.left);
-                shape.setAttribute("y", element.top);
-                shape.setAttribute("fill", element.defaultColor || "#000");
-                shape.setAttribute("font-size", "24px");
-                shape.innerHTML = element.content.replace(/<[^>]+>/g, "");
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'triangle-text';
+                textDiv.innerHTML = element.text.content;
+                
+                textContainer.appendChild(textDiv);
+                shape.appendChild(textContainer);
             }
-
-            if (shape) {
-                svg.appendChild(shape);
+            
+            slide.appendChild(shape);
+        }
+        
+        function drawLine(element, slide) {
+            const lineContainer = document.createElement('div');
+            lineContainer.className = 'svg-line-container';
+            lineContainer.style.position = 'absolute';
+            lineContainer.style.left = `${element.left}px`;
+            lineContainer.style.top = `${element.top}px`;
+            lineContainer.style.width = '100%';
+            lineContainer.style.height = '100%';
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.position = 'absolute';
+            svg.style.left = '0';
+            svg.style.top = '0';
+            svg.style.overflow = 'visible';
+            
+            // Tạo marker cho mũi tên nếu cần
+            if (element.points && element.points.includes('arrow')) {
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                marker.setAttribute('id', 'arrowhead');
+                marker.setAttribute('markerWidth', '6');
+                marker.setAttribute('markerHeight', '4');
+                marker.setAttribute('refX', '5');
+                marker.setAttribute('refY', '2');
+                marker.setAttribute('orient', 'auto');
+                const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                arrowPath.setAttribute('d', 'M0,0 L6,2 L0,4 Z');
+                arrowPath.setAttribute('fill', element.color || '#5b9bd5');
+                marker.appendChild(arrowPath);
+                defs.appendChild(marker);
+                svg.appendChild(defs);
             }
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            
+            let pathData = '';
+            if (element.cubic) {
+                pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+                          C${element.cubic[0][0]} ${element.cubic[0][1]} 
+                          ${element.cubic[1][0]} ${element.cubic[1][1]} 
+                          ${element.end[0]} ${element.end[1]}`;
+            } else if (element.curve) {
+                pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+                           Q${element.curve[0]} ${element.curve[1]} 
+                           ${element.end[0]} ${element.end[1]}`;
+            } else if (element.broken) {
+                pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+                          L${element.broken[0]} ${element.broken[1]} 
+                          L${element.end[0]} ${element.end[1]}`;
+            } else {
+                pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+                           L${element.end[0]} ${element.end[1]}`;
+            }
+            
+            line.setAttribute('d', pathData);
+            line.setAttribute('stroke', element.color || '#5b9bd5');
+            line.setAttribute('stroke-width', element.width || 2);
+            line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('fill', 'none');
+            
+            if (element.style === 'dashed') {
+                line.setAttribute('stroke-dasharray', '5,5');
+            }
+            
+            if (element.points && element.points.includes('arrow')) {
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+            }
+            
+            svg.appendChild(line);
+            
+            if (element.points && element.points.includes('dot')) {
+                const dotSize = (element.width || 2) * 1.5;
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', element.end[0]);
+                circle.setAttribute('cy', element.end[1]);
+                circle.setAttribute('r', dotSize);
+                circle.setAttribute('fill', element.color || '#5b9bd5');
+                svg.appendChild(circle);
+            }
+            
+            lineContainer.appendChild(svg);
+            slide.appendChild(lineContainer);
+        }
+        
+        // Tạo phần tử văn bản
+        function createTextElement(element, slide) {
+            const text = document.createElement('div');
+            text.className = 'text-element';
+            text.style.left = `${element.left}px`;
+            text.style.top = `${element.top}px`;
+            text.style.width = `${element.width}px`;
+            text.style.height = `${element.height}px`;
+            
+            if (element.rotate) {
+                text.style.transform = `rotate(${element.rotate}deg)`;
+            }
+            
+            text.innerHTML = element.content;
+            slide.appendChild(text);
+        }
+        
+        // Tạo nút điều hướng
+        function createNavigationButtons() {
+            const existingNav = document.querySelector('.slide-navigation');
+            if (existingNav) existingNav.remove();
+            
+            if (currentSlides.length <= 1) return;
+            
+            const nav = document.createElement('div');
+            nav.className = 'slide-navigation';
+            
+            for (let i = 0; i < currentSlides.length; i++) {
+                const button = document.createElement('button');
+                button.textContent = `Slide ${i + 1}`;
+                button.onclick = () => showSlide(i);
+                nav.appendChild(button);
+            }
+            
+            document.querySelector('.slide-container').after(nav);
+        }
+        
+        // Hiển thị slide được chọn
+        function showSlide(index) {
+            if (index < 0 || index >= currentSlides.length) return;
+            
+            currentSlides.forEach(slide => {
+                slide.style.display = 'none';
+            });
+            
+            currentSlides[index].style.display = 'block';
+            currentSlideIndex = index;
         }
     </script>
 </body>
