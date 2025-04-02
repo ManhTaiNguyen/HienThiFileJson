@@ -134,6 +134,10 @@
         .svg-line-container {
             overflow: visible;
         }
+
+        .line-with-shadow {
+            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.3));
+        }
     </style>
 </head>
 <body>
@@ -205,6 +209,13 @@
             if (slideData.background) {
                 if (slideData.background.type === 'solid') {
                     slide.style.backgroundColor = slideData.background.color || '#ffffff';
+                } else if (slideData.background.type === 'gradient') {
+                    const gradient = slideData.background.gradient;
+                    if (gradient.type === 'linear') {
+                        slide.style.background = `linear-gradient(${gradient.angle || 0}deg, ${gradient.stops.join(', ')})`;
+                    } else if (gradient.type === 'radial') {
+                        slide.style.background = `radial-gradient(circle at ${gradient.centerX || '50%'} ${gradient.centerY || '50%'}, ${gradient.stops.join(', ')})`;
+                    }
                 }
             }
             
@@ -237,25 +248,322 @@
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', element.width);
             svg.setAttribute('height', element.height);
-            svg.setAttribute('viewBox', `0 0 ${element.viewBox[0]} ${element.viewBox[1]}`);
+            svg.setAttribute('viewBox', `0 0 ${element.viewBox?.[0] || element.width} ${element.viewBox?.[1] || element.height}`);
             svg.setAttribute('preserveAspectRatio', 'none');
             
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', element.path);
-            path.setAttribute('fill', element.fill || '#5b9bd5');
-            path.setAttribute('opacity', element.opacity || 1);
-            
-            if (element.flipV) {
-                path.setAttribute('transform', 'scale(1,-1) translate(0,-200)');
+            // Tạo gradient nếu có
+            let gradientId = null;
+            if (element.fill && element.fill.type === 'gradient') {
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
+                
+                if (element.fill.gradient.type === 'linear') {
+                    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+                    gradient.setAttribute('id', gradientId);
+                    gradient.setAttribute('x1', element.fill.gradient.x1 || '0%');
+                    gradient.setAttribute('y1', element.fill.gradient.y1 || '0%');
+                    gradient.setAttribute('x2', element.fill.gradient.x2 || '100%');
+                    gradient.setAttribute('y2', element.fill.gradient.y2 || '0%');
+                    gradient.setAttribute('gradientTransform', `rotate(${element.gradient.rotate || 0})`);
+                    
+                    element.fill.gradient.stops.forEach(stop => {
+                        const stopElement = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                        stopElement.setAttribute('offset', stop.offset);
+                        stopElement.setAttribute('stop-color', stop.color);
+                        if (stop.opacity) stopElement.setAttribute('stop-opacity', stop.opacity);
+                        gradient.appendChild(stopElement);
+                    });
+                    
+                    defs.appendChild(gradient);
+                } else if (element.fill.gradient.type === 'radial') {
+                    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
+                    gradient.setAttribute('id', gradientId);
+                    gradient.setAttribute('cx', element.fill.gradient.cx || '50%');
+                    gradient.setAttribute('cy', element.fill.gradient.cy || '50%');
+                    gradient.setAttribute('r', element.fill.gradient.r || '50%');
+                    gradient.setAttribute('fx', element.fill.gradient.fx || element.fill.gradient.cx || '50%');
+                    gradient.setAttribute('fy', element.fill.gradient.fy || element.fill.gradient.cy || '50%');
+                    
+                    element.fill.gradient.stops.forEach(stop => {
+                        const stopElement = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                        stopElement.setAttribute('offset', stop.offset);
+                        stopElement.setAttribute('stop-color', stop.color);
+                        if (stop.opacity) stopElement.setAttribute('stop-opacity', stop.opacity);
+                        gradient.appendChild(stopElement);
+                    });
+                    
+                    defs.appendChild(gradient);
+                }
+                
+                svg.appendChild(defs);
             }
             
+            let path;
+            if (element.shapeType) {
+                switch (element.shapeType.toLowerCase()) {
+                    case 'rectangle':
+                    case 'rect':
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', '0');
+                        rect.setAttribute('y', '0');
+                        rect.setAttribute('width', '100%');
+                        rect.setAttribute('height', '100%');
+                        
+                        // Xử lý fill
+                        if (gradientId) {
+                            rect.setAttribute('fill', `url(#${gradientId})`);
+                        } else {
+                            rect.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                        }
+                        
+                        rect.setAttribute('opacity', element.opacity || 1);
+                        
+                        // Xử lý đường viền
+                        if (element.borderWidth && element.borderWidth > 0) {
+                            rect.setAttribute('stroke', element.borderColor || '#000000');
+                            rect.setAttribute('stroke-width', element.borderWidth);
+                            
+                            // Xử lý kiểu đường viền
+                            if (element.borderStyle) {
+                                switch(element.borderStyle.toLowerCase()) {
+                                    case 'dashed':
+                                        rect.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                        break;
+                                    case 'dotted':
+                                        rect.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                    case 'double':
+                                        rect.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                }
+                            }
+                        }
+                        
+                        if (element.rx) rect.setAttribute('rx', element.rx);
+                        if (element.ry) rect.setAttribute('ry', element.ry);
+                        svg.appendChild(rect);
+                        break;
+                        
+                    case 'circle':
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', '50%');
+                        circle.setAttribute('cy', '50%');
+                        circle.setAttribute('r', '50%');
+                        
+                        // Xử lý fill
+                        if (gradientId) {
+                            circle.setAttribute('fill', `url(#${gradientId})`);
+                        } else {
+                            circle.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                        }
+                        
+                        circle.setAttribute('opacity', element.opacity || 1);
+                        
+                        // Xử lý border
+                        if (element.borderWidth && element.borderWidth > 0) {
+                            circle.setAttribute('stroke', element.borderColor || '#000000');
+                            circle.setAttribute('stroke-width', element.borderWidth);
+                            
+                            // Xử lý kiểu border
+                            if (element.borderStyle) {
+                                switch(element.borderStyle.toLowerCase()) {
+                                    case 'dashed':
+                                        circle.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                        break;
+                                    case 'dotted':
+                                        circle.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                    case 'double':
+                                        circle.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                }
+                            }
+                        }
+                        
+                        svg.appendChild(circle);
+                        break;
+                        
+                    case 'ellipse':
+                        const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                        ellipse.setAttribute('cx', '50%');
+                        ellipse.setAttribute('cy', '50%');
+                        ellipse.setAttribute('rx', '50%');
+                        ellipse.setAttribute('ry', '30%');
+                        
+                        // Xử lý fill
+                        if (gradientId) {
+                            ellipse.setAttribute('fill', `url(#${gradientId})`);
+                        } else {
+                            ellipse.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                        }
+                        
+                        ellipse.setAttribute('opacity', element.opacity || 1);
+                        
+                        // Xử lý border
+                        if (element.borderWidth && element.borderWidth > 0) {
+                            ellipse.setAttribute('stroke', element.borderColor || '#000000');
+                            ellipse.setAttribute('stroke-width', element.borderWidth);
+                            
+                            // Xử lý kiểu border
+                            if (element.borderStyle) {
+                                switch(element.borderStyle.toLowerCase()) {
+                                    case 'dashed':
+                                        ellipse.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                        break;
+                                    case 'dotted':
+                                        ellipse.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                    case 'double':
+                                        ellipse.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                }
+                            }
+                        }
+                        
+                        svg.appendChild(ellipse);
+                        break;
+                        
+                    case 'polygon':
+                        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        const points = element.points || '0,0 100,0 50,100';
+                        polygon.setAttribute('points', points);
+                        
+                        // Xử lý fill
+                        if (gradientId) {
+                            polygon.setAttribute('fill', `url(#${gradientId})`);
+                        } else {
+                            polygon.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                        }
+                        
+                        polygon.setAttribute('opacity', element.opacity || 1);
+                        
+                        // Xử lý border
+                        if (element.borderWidth && element.borderWidth > 0) {
+                            polygon.setAttribute('stroke', element.borderColor || '#000000');
+                            polygon.setAttribute('stroke-width', element.borderWidth);
+                            
+                            // Xử lý kiểu border
+                            if (element.borderStyle) {
+                                switch(element.borderStyle.toLowerCase()) {
+                                    case 'dashed':
+                                        polygon.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                        break;
+                                    case 'dotted':
+                                        polygon.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                    case 'double':
+                                        polygon.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                }
+                            }
+                        }
+                        
+                        svg.appendChild(polygon);
+                        break;
+                        
+                    case 'line':
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', element.x1 || '0');
+                        line.setAttribute('y1', element.y1 || '0');
+                        line.setAttribute('x2', element.x2 || '100%');
+                        line.setAttribute('y2', element.y2 || '100%');
+                        line.setAttribute('stroke', element.stroke || '#5b9bd5');
+                        line.setAttribute('stroke-width', element.strokeWidth || 2);
+                        line.setAttribute('opacity', element.opacity || 1);
+                        svg.appendChild(line);
+                        break;
+                        
+                    default:
+                        path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', element.path || 'M0,0 L100,0 L50,100 Z');
+                        
+                        // Xử lý fill
+                        if (gradientId) {
+                            path.setAttribute('fill', `url(#${gradientId})`);
+                        } else {
+                            path.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                        }
+                        
+                        path.setAttribute('opacity', element.opacity || 1);
+                        
+                        // Xử lý border
+                        if (element.borderWidth && element.borderWidth > 0) {
+                            path.setAttribute('stroke', element.borderColor || '#000000');
+                            path.setAttribute('stroke-width', element.borderWidth);
+                            
+                            // Xử lý kiểu border
+                            if (element.borderStyle) {
+                                switch(element.borderStyle.toLowerCase()) {
+                                    case 'dashed':
+                                        path.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                        break;
+                                    case 'dotted':
+                                        path.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                    case 'double':
+                                        path.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                        break;
+                                }
+                            }
+                        }
+                        
+                        svg.appendChild(path);
+                }
+            } else {
+                path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', element.path || 'M0,0 L100,0 L50,100 Z');
+                
+                // Xử lý fill
+                if (gradientId) {
+                    path.setAttribute('fill', `url(#${gradientId})`);
+                } else {
+                    path.setAttribute('fill', element.fill?.color || element.fill || '#5b9bd5');
+                }
+                
+                path.setAttribute('opacity', element.opacity || 1);
+                
+                // Xử lý border
+                if (element.borderWidth && element.borderWidth > 0) {
+                    path.setAttribute('stroke', element.borderColor || '#000000');
+                    path.setAttribute('stroke-width', element.borderWidth);
+                    
+                    // Xử lý kiểu border
+                    if (element.borderStyle) {
+                        switch(element.borderStyle.toLowerCase()) {
+                            case 'dashed':
+                                path.setAttribute('stroke-dasharray', `${element.borderWidth * 3},${element.borderWidth * 2}`);
+                                break;
+                            case 'dotted':
+                                path.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                break;
+                            case 'double':
+                                path.setAttribute('stroke-dasharray', `${element.borderWidth},${element.borderWidth}`);
+                                break;
+                        }
+                    }
+                }
+                
+                svg.appendChild(path);
+            }
+            
+            // Xử lý flip và rotate
+            let transform = '';
+            if (element.flipV) {
+                transform += ' scale(1,-1)';
+            }
+            if (element.flipH) {
+                transform += ' scale(-1,1)';
+            }
             if (element.rotate) {
                 const centerX = element.width / 2;
                 const centerY = element.height / 2;
-                path.setAttribute('transform', `rotate(${element.rotate}, ${centerX}, ${centerY})`);
+                transform += ` rotate(${element.rotate}, ${centerX}, ${centerY})`;
             }
             
-            svg.appendChild(path);
+            if (transform) {
+                svg.setAttribute('transform', transform.trim());
+            }
+            
             shape.appendChild(svg);
             
             // Thêm text nếu có
@@ -267,14 +575,32 @@
                     textContainer.style.opacity = element.opacity;
                 }
 
+                // Áp dụng flip cho text container nếu cần
+                let textTransform = '';
                 if (element.flipV) {
-                    textContainer.style.transform = 'scaleY(-1)';                
+                    textTransform += ' scaleY(-1)';
+                }
+                if (element.flipH) {
+                    textTransform += ' scaleX(-1)';
+                }
+                if (textTransform) {
+                    textContainer.style.transform = textTransform.trim();
                 }
                 
                 const textDiv = document.createElement('div');
                 textDiv.className = 'triangle-text';
-                textDiv.innerHTML = element.text.content;
                 
+                // Áp dụng căn chỉnh text
+                if (element.text.align) {
+                    textDiv.style.textAlign = element.text.align;
+                    textDiv.style.width = '100%';
+                    textDiv.style.display = 'flex';
+                    textDiv.style.justifyContent = 
+                        element.text.align === 'left' ? 'flex-start' :
+                        element.text.align === 'right' ? 'flex-end' : 'center';
+                }
+                
+                textDiv.innerHTML = element.text.content;
                 textContainer.appendChild(textDiv);
                 shape.appendChild(textContainer);
             }
@@ -290,52 +616,59 @@
             lineContainer.style.top = `${element.top}px`;
             lineContainer.style.width = '100%';
             lineContainer.style.height = '100%';
-            
+
+            // Áp dụng hiệu ứng bóng đổ
+            if (element.shadow) {
+                lineContainer.classList.add('line-with-shadow');
+                const shadow = element.shadow;
+                lineContainer.style.filter = `drop-shadow(${shadow.h || 0}px ${shadow.v || 0}px ${shadow.blur || 0}px ${shadow.color || '#000'})`;
+            }
+
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', '100%');
             svg.setAttribute('height', '100%');
-            svg.style.position = 'absolute';
-            svg.style.left = '0';
-            svg.style.top = '0';
             svg.style.overflow = 'visible';
             
-            // Tạo marker cho mũi tên nếu cần
+            // Tạo marker cho mũi tên
             if (element.points && element.points.includes('arrow')) {
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                marker.setAttribute('id', 'arrowhead');
-                marker.setAttribute('markerWidth', '6');
-                marker.setAttribute('markerHeight', '4');
-                marker.setAttribute('refX', '5');
-                marker.setAttribute('refY', '2');
+                marker.setAttribute('id', `arrowhead-${Math.random().toString(36).substr(2, 9)}`);
+                marker.setAttribute('markerWidth', '8');
+                marker.setAttribute('markerHeight', '6');
+                marker.setAttribute('refX', '6');
+                marker.setAttribute('refY', '3');
                 marker.setAttribute('orient', 'auto');
                 const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                arrowPath.setAttribute('d', 'M0,0 L6,2 L0,4 Z');
+                arrowPath.setAttribute('d', 'M0,0 L8,3 L0,6 Z');
                 arrowPath.setAttribute('fill', element.color || '#5b9bd5');
                 marker.appendChild(arrowPath);
                 defs.appendChild(marker);
                 svg.appendChild(defs);
             }
-            
+
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             
+            // Xác định dạng đường kẻ
             let pathData = '';
             if (element.cubic) {
                 pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
-                          C${element.cubic[0][0]} ${element.cubic[0][1]} 
-                          ${element.cubic[1][0]} ${element.cubic[1][1]} 
-                          ${element.end[0]} ${element.end[1]}`;
+                        C${element.cubic[0][0]} ${element.cubic[0][1]} 
+                        ${element.cubic[1][0]} ${element.cubic[1][1]} 
+                        ${element.end[0]} ${element.end[1]}`;
             } else if (element.curve) {
                 pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
-                           Q${element.curve[0]} ${element.curve[1]} 
-                           ${element.end[0]} ${element.end[1]}`;
+                        Q${element.curve[0]} ${element.curve[1]} 
+                        ${element.end[0]} ${element.end[1]}`;
             } else if (element.broken) {
+                // Đường gấp khúc
                 pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
-                          L${element.broken[0]} ${element.broken[1]} 
-                          L${element.end[0]} ${element.end[1]}`;
+                        L${element.broken[0]} ${element.broken[1]} 
+                        L${element.end[0]} ${element.end[1]}`;
             } else {
+                // Đường thẳng
                 pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
-                           L${element.end[0]} ${element.end[1]}`;
+                        L${element.end[0]} ${element.end[1]}`;
             }
             
             line.setAttribute('d', pathData);
@@ -344,24 +677,73 @@
             line.setAttribute('stroke-linecap', 'round');
             line.setAttribute('fill', 'none');
             
-            if (element.style === 'dashed') {
-                line.setAttribute('stroke-dasharray', '5,5');
+            // Xử lý các kiểu đường kẻ
+            if (element.style) {
+                switch(element.style.toLowerCase()) {
+                    case 'dashed':
+                        // Nét đứt với khoảng cách có thể tùy chỉnh
+                        const dashLength = Math.max(3, element.width || 2) * 3.5;
+                        const gapLength = Math.max(2, element.width || 2) * 2.5;
+                        line.setAttribute('stroke-dasharray', `${dashLength},${gapLength}`);
+                        break;
+                    // case 'dotted':
+                    //     // Nét chấm
+                    //     line.setAttribute('stroke-dasharray', `1,${Math.max(3, element.width || 2) * 2}`);
+                    //     line.setAttribute('stroke-linecap', 'round');
+                    //     break;
+                    // case 'dash-dot':
+                    //     // Nét gạch-chấm
+                    //     line.setAttribute('stroke-dasharray', `${Math.max(5, element.width || 2) * 2},${Math.max(3, element.width || 2)},${Math.max(1, element.width || 2)},${Math.max(3, element.width || 2)}`);
+                    //     break;
+                    case 'custom':
+                        // Cho phép tùy chỉnh hoàn toàn
+                        if (element.dashArray) {
+                            line.setAttribute('stroke-dasharray', element.dashArray);
+                        }
+                        break;
+                }
             }
             
             if (element.points && element.points.includes('arrow')) {
-                line.setAttribute('marker-end', 'url(#arrowhead)');
+                const markers = svg.querySelector('defs').querySelector('marker');
+                line.setAttribute('marker-end', `url(#${markers.getAttribute('id')})`);
             }
             
             svg.appendChild(line);
             
             if (element.points && element.points.includes('dot')) {
-                const dotSize = (element.width || 2) * 1.5;
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', element.end[0]);
-                circle.setAttribute('cy', element.end[1]);
-                circle.setAttribute('r', dotSize);
-                circle.setAttribute('fill', element.color || '#5b9bd5');
-                svg.appendChild(circle);
+                const dotRadius = (element.width || 2) * 2;
+                const dotColor = element.color || '#5b9bd5';
+                
+                // Điểm bắt đầu
+                if (element.start) {
+                    const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    startDot.setAttribute('cx', element.start[0]);
+                    startDot.setAttribute('cy', element.start[1]);
+                    startDot.setAttribute('r', dotRadius);
+                    startDot.setAttribute('fill', dotColor);
+                    svg.appendChild(startDot);
+                }
+                
+                // Điểm kết thúc
+                if (element.end) {
+                    const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    endDot.setAttribute('cx', element.end[0]);
+                    endDot.setAttribute('cy', element.end[1]);
+                    // endDot.setAttribute('r', dotRadius);
+                    endDot.setAttribute('fill', dotColor);
+                    svg.appendChild(endDot);
+                }
+                
+                // Điểm gấp khúc (nếu có)
+                if (element.broken) {
+                    const brokenDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    brokenDot.setAttribute('cx', element.broken[0]);
+                    brokenDot.setAttribute('cy', element.broken[1]);
+                    brokenDot.setAttribute('r', dotRadius);
+                    brokenDot.setAttribute('fill', dotColor);
+                    svg.appendChild(brokenDot);
+                }
             }
             
             lineContainer.appendChild(svg);
@@ -379,6 +761,16 @@
             
             if (element.rotate) {
                 text.style.transform = `rotate(${element.rotate}deg)`;
+            }
+            
+            // Áp dụng line-height nếu có
+            if (element.lineHeight) {
+                text.style.lineHeight = `${element.lineHeight}`;
+            }
+            
+            // Áp dụng màu mặc định nếu có
+            if (element.defaultColor) {
+                text.style.color = element.defaultColor;
             }
             
             text.innerHTML = element.content;
