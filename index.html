@@ -240,15 +240,23 @@
         function drawShape(element, slide) {
             const shape = document.createElement('div');
             shape.className = 'shape';
+
+            // Tính toán vị trí và kích thước
+            const width = element.width || 100;
+            const height = element.height || 100;
+
+            // Đặt transform origin vào giữa hình dạng
+            shape.style.transformOrigin = 'center center';
+
             shape.style.left = `${element.left}px`;
             shape.style.top = `${element.top}px`;
             shape.style.width = `${element.width}px`;
             shape.style.height = `${element.height}px`;
             
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', element.width);
-            svg.setAttribute('height', element.height);
-            svg.setAttribute('viewBox', `0 0 ${element.viewBox?.[0] || element.width} ${element.viewBox?.[1] || element.height}`);
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${element.viewBox?.[0] || width} ${element.viewBox?.[1] || height}`);
             svg.setAttribute('preserveAspectRatio', 'none');
             
             // Tạo gradient nếu có
@@ -546,22 +554,28 @@
                 svg.appendChild(path);
             }
             
+            // Áp dụng transform cho cả SVG và shape container nếu cần
+            let svgTransform = '';
+            let shapeTransform = '';
+
             // Xử lý flip và rotate
-            let transform = '';
             if (element.flipV) {
-                transform += ' scale(1,-1)';
+                svgTransform += ' scale(1,-1)';
             }
             if (element.flipH) {
-                transform += ' scale(-1,1)';
+                svgTransform += ' scale(-1,1)';
             }
             if (element.rotate) {
-                const centerX = element.width / 2;
-                const centerY = element.height / 2;
-                transform += ` rotate(${element.rotate}, ${centerX}, ${centerY})`;
+                // Áp dụng rotate cho shape container để giữ nguyên vị trí
+                shapeTransform += ` rotate(${element.rotate}deg)`;
+                shape.style.transformOrigin = 'center center';
             }
             
-            if (transform) {
-                svg.setAttribute('transform', transform.trim());
+            if (svgTransform) {
+                svg.setAttribute('transform', svgTransform.trim());
+            }
+            if (shapeTransform) {
+                shape.style.transform = shapeTransform.trim();
             }
             
             shape.appendChild(svg);
@@ -570,6 +584,7 @@
             if (element.text && element.text.content) {
                 const textContainer = document.createElement('div');
                 textContainer.className = 'triangle-text-container';
+                textContainer.style.transformOrigin = 'center center';
                 
                 if (element.opacity !== undefined) {
                     textContainer.style.opacity = element.opacity;
