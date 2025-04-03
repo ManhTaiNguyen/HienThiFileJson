@@ -617,7 +617,6 @@
             lineContainer.style.width = '100%';
             lineContainer.style.height = '100%';
 
-            // Áp dụng hiệu ứng bóng đổ
             if (element.shadow) {
                 lineContainer.classList.add('line-with-shadow');
                 const shadow = element.shadow;
@@ -629,22 +628,50 @@
             svg.setAttribute('height', '100%');
             svg.style.overflow = 'visible';
             
-            // Tạo marker cho mũi tên
-            if (element.points && element.points.includes('arrow')) {
-                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            // Tạo defs cho các marker
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.appendChild(defs);
+
+            // Kích thước mũi tên dựa trên độ rộng đường kẻ
+            const arrowSize = (element.width || 1) + 0.5;
+
+            // Tạo marker cho mũi tên (đầu bắt đầu) - ngược hướng
+            let arrowStartMarkerId = null;
+            if (element.points && element.points[0] === 'arrow') {
+                arrowStartMarkerId = `arrowhead-start-${Math.random().toString(36).substr(2, 9)}`;
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                marker.setAttribute('id', `arrowhead-${Math.random().toString(36).substr(2, 9)}`);
-                marker.setAttribute('markerWidth', '8');
-                marker.setAttribute('markerHeight', '6');
-                marker.setAttribute('refX', '6');
-                marker.setAttribute('refY', '3');
+                marker.setAttribute('id', arrowStartMarkerId);
+                marker.setAttribute('markerWidth', arrowSize);
+                marker.setAttribute('markerHeight', arrowSize);
+                marker.setAttribute('refX', arrowSize * 0.5); // Điểm neo vào đầu đường kẻ
+                marker.setAttribute('refY', arrowSize / 2);
                 marker.setAttribute('orient', 'auto');
                 const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                arrowPath.setAttribute('d', 'M0,0 L8,3 L0,6 Z');
+                // Tam giác đều hướng ngược lại
+                arrowPath.setAttribute('d', `M${arrowSize},0 L0,${arrowSize/2} L${arrowSize},${arrowSize} Z`);
                 arrowPath.setAttribute('fill', element.color || '#5b9bd5');
                 marker.appendChild(arrowPath);
                 defs.appendChild(marker);
-                svg.appendChild(defs);
+            }
+            
+            // Tạo marker cho mũi tên (đầu cuối)
+            let arrowEndMarkerId = null;
+            if ((element.points && element.points[0] === 'arrow') || 
+                (element.points && element.points[1] === 'arrow')) {
+                arrowEndMarkerId = `arrowhead-end-${Math.random().toString(36).substr(2, 9)}`;
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                marker.setAttribute('id', arrowEndMarkerId);
+                marker.setAttribute('markerWidth', arrowSize);
+                marker.setAttribute('markerHeight', arrowSize);
+                marker.setAttribute('refX', arrowSize * 0.9); // Điểm neo vào cuối đường kẻ
+                marker.setAttribute('refY', arrowSize / 2);
+                marker.setAttribute('orient', 'auto');
+                const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                // Tam giác đều hướng về phía trước
+                arrowPath.setAttribute('d', `M0,0 L${arrowSize},${arrowSize/2} L0,${arrowSize} Z`);
+                arrowPath.setAttribute('fill', element.color || '#5b9bd5');
+                marker.appendChild(arrowPath);
+                defs.appendChild(marker);
             }
 
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -675,77 +702,81 @@
             line.setAttribute('stroke', element.color || '#5b9bd5');
             line.setAttribute('stroke-width', element.width || 2);
             line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('stroke-linejoin', 'round');
             line.setAttribute('fill', 'none');
             
             // Xử lý các kiểu đường kẻ
             if (element.style) {
                 switch(element.style.toLowerCase()) {
                     case 'dashed':
-                        // Nét đứt với khoảng cách có thể tùy chỉnh
                         const dashLength = Math.max(3, element.width || 2) * 3.5;
                         const gapLength = Math.max(2, element.width || 2) * 2.5;
                         line.setAttribute('stroke-dasharray', `${dashLength},${gapLength}`);
                         break;
-                    // case 'dotted':
-                    //     // Nét chấm
-                    //     line.setAttribute('stroke-dasharray', `1,${Math.max(3, element.width || 2) * 2}`);
-                    //     line.setAttribute('stroke-linecap', 'round');
-                    //     break;
-                    // case 'dash-dot':
-                    //     // Nét gạch-chấm
-                    //     line.setAttribute('stroke-dasharray', `${Math.max(5, element.width || 2) * 2},${Math.max(3, element.width || 2)},${Math.max(1, element.width || 2)},${Math.max(3, element.width || 2)}`);
-                    //     break;
                     case 'custom':
-                        // Cho phép tùy chỉnh hoàn toàn
                         if (element.dashArray) {
                             line.setAttribute('stroke-dasharray', element.dashArray);
                         }
                         break;
+                        case 'double':
+                    // Tạo hiệu ứng đường kép
+                    line.setAttribute('stroke', 'transparent');
+                    line.setAttribute('stroke-width', (element.width || 2) * 3);
+                    line.setAttribute('stroke-linecap', 'butt');
+                    
+                    const innerLine = line.cloneNode();
+                    innerLine.setAttribute('stroke', element.color || '#5b9bd5');
+                    innerLine.setAttribute('stroke-width', element.width || 2);
+                    svg.appendChild(innerLine);
+                    break;
                 }
             }
+
+            // Xử lý chấm ở điểm đầu và cuối
+            const dotRadius = (element.width || 2) * 2;
+            const dotColor = element.color || '#5b9bd5';
             
-            if (element.points && element.points.includes('arrow')) {
-                const markers = svg.querySelector('defs').querySelector('marker');
-                line.setAttribute('marker-end', `url(#${markers.getAttribute('id')})`);
+            // Xử lý điểm đầu và điểm cuối
+            if (element.points) {
+                if (element.points[0] === 'arrow' && arrowStartMarkerId) {
+                    line.setAttribute('marker-start', `url(#${arrowStartMarkerId})`);
+                }
+                if (element.points[1] === 'arrow' && arrowEndMarkerId) {
+                    line.setAttribute('marker-end', `url(#${arrowEndMarkerId})`);
+                }
+            }
+
+            // Điểm bắt đầu
+            if (element.start && element.points && element.points[0] === 'dot') {
+                const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                startDot.setAttribute('cx', element.start[0]);
+                startDot.setAttribute('cy', element.start[1]);
+                startDot.setAttribute('r', dotRadius);
+                startDot.setAttribute('fill', dotColor);
+                svg.appendChild(startDot);
+            }
+            
+            // Điểm kết thúc
+            if (element.end && element.points && element.points[1] === 'dot') {
+                const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                endDot.setAttribute('cx', element.end[0]);
+                endDot.setAttribute('cy', element.end[1]);
+                endDot.setAttribute('r', dotRadius);
+                endDot.setAttribute('fill', dotColor);
+                svg.appendChild(endDot);
+            }
+            
+            // Điểm gấp khúc (nếu có)
+            if (element.broken && element.brokenPoint === 'dot') {
+                const brokenDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                brokenDot.setAttribute('cx', element.broken[0]);
+                brokenDot.setAttribute('cy', element.broken[1]);
+                brokenDot.setAttribute('r', dotRadius);
+                brokenDot.setAttribute('fill', dotColor);
+                svg.appendChild(brokenDot);
             }
             
             svg.appendChild(line);
-            
-            if (element.points && element.points.includes('dot')) {
-                const dotRadius = (element.width || 2) * 2;
-                const dotColor = element.color || '#5b9bd5';
-                
-                // Điểm bắt đầu
-                if (element.start) {
-                    const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    startDot.setAttribute('cx', element.start[0]);
-                    startDot.setAttribute('cy', element.start[1]);
-                    startDot.setAttribute('r', dotRadius);
-                    startDot.setAttribute('fill', dotColor);
-                    svg.appendChild(startDot);
-                }
-                
-                // Điểm kết thúc
-                if (element.end) {
-                    const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    endDot.setAttribute('cx', element.end[0]);
-                    endDot.setAttribute('cy', element.end[1]);
-                    // endDot.setAttribute('r', dotRadius);
-                    endDot.setAttribute('fill', dotColor);
-                    svg.appendChild(endDot);
-                }
-                
-                // Điểm gấp khúc (nếu có)
-                if (element.broken) {
-                    const brokenDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    brokenDot.setAttribute('cx', element.broken[0]);
-                    brokenDot.setAttribute('cy', element.broken[1]);
-                    brokenDot.setAttribute('r', dotRadius);
-                    brokenDot.setAttribute('fill', dotColor);
-                    svg.appendChild(brokenDot);
-                }
-            }
-            
             lineContainer.appendChild(svg);
             slide.appendChild(lineContainer);
         }
@@ -763,12 +794,10 @@
                 text.style.transform = `rotate(${element.rotate}deg)`;
             }
             
-            // Áp dụng line-height nếu có
             if (element.lineHeight) {
                 text.style.lineHeight = `${element.lineHeight}`;
             }
             
-            // Áp dụng màu mặc định nếu có
             if (element.defaultColor) {
                 text.style.color = element.defaultColor;
             }
