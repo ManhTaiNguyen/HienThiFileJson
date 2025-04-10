@@ -67,12 +67,76 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  line-height: 1.5;
 }
 
 .text-element p {
   margin: 0;
   padding: 0;
   width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+.text-element ul {
+  padding-left: 20px;
+  list-style-type: disc;
+  margin: 6px 0;
+  padding-inline-start: 1.25em;
+}
+
+ul {
+  display: block;
+  list-style-type: disc;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  padding-inline-start: 40px;
+  unicode-bidi: isolate;
+}
+
+ol {
+  display: block;
+  list-style-type: decimal;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  padding-inline-start: 40px;
+  unicode-bidi: isolate;
+}
+
+.ProseMirror {
+  white-space: pre-wrap;
+}
+
+ol,ul {
+  list-style: none;
+  line-height: 1.5;
+}
+
+.text-element ol {
+  padding-left: 20px;
+  list-style-type: decimal;
+  margin: 6px 0;
+}
+
+blockquote, blockquote {
+  overflow: hidden;
+  padding-right: 1.2em;
+  padding-left: 1.2em;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  border-left: 4px solid #ddd;
+}
+
+blockquote, q {
+  quotes: none;
+}
+
+blockquote {
+  display: block;
+  unicode-bidi: isolate;
 }
 
 .text-element strong {
@@ -81,6 +145,16 @@ p {
 
 .text-element em {
   font-style: italic;
+}
+
+.text-element sup {
+  vertical-align: super;
+  font-size: 0.75em;
+}
+
+.text-element sub {
+  vertical-align: sub;
+  font-size: 0.75em;
 }
 
 .text-element span {
@@ -99,6 +173,18 @@ p {
   text-align: right;
 }
 
+.text-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+
+.text-element code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
 .shape-text-container {
   position: absolute;
   width: 100%;
@@ -114,7 +200,7 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 90%;
+  width: 100%;
   height: 90%;
   text-align: start;
   word-wrap: break-word;
@@ -129,7 +215,7 @@ p {
   width: 100%;
   line-height: 1.2;
   display: block;
-  cursor: pointer;
+  cursor: auto;
 }
 
 .shape {

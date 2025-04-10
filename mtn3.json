@@ -128,6 +128,14 @@
           "v": 3,
           "blur": 2,
           "color": "#808080"
+        },
+        "gradient": {
+          "type": "linear",
+          "rotate": 360,
+          "color": [
+            "rgba(213,128,91,1)",
+            "#c21401"
+          ]
         }
       },
       {
@@ -136,12 +144,18 @@
         "left": 243.122971173629,
         "top": 435.37621359223294,
         "width": 202.26537216828476,
-        "height": 80,
-        "content": "<p style=\"\">andlkqưdbqơiqeohiqưhe</p>",
+        "height": 85,
+        "content": "<p style=\"text-align: right;\">andlkq</p><p style=\"text-align: right;\">ưdbqơiqeohiqưhe</p>",
         "rotate": 0,
         "defaultFontName": "Arial",
         "defaultColor": "#333",
-        "vertical": false
+        "vertical": false,
+        "outline": {
+          "width": 2,
+          "color": "#525252",
+          "style": "solid"
+        },
+        "fill": "#ffff3a"
       },
       {
         "type": "text",
@@ -150,7 +164,63 @@
         "top": 495.04449838187696,
         "width": 202.26537216828476,
         "height": 50,
-        "content": "<p style=\"\">qưebo</p>",
+        "content": "<p style=\"text-align: center;\">qưebo</p>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false,
+        "shadow": {
+          "h": 3,
+          "v": 3,
+          "blur": 2,
+          "color": "#808080"
+        }
+      },
+      {
+        "type": "text",
+        "id": "9MnI0u-Kti",
+        "left": 708.4615738436366,
+        "top": 57.48955876696042,
+        "width": 240.476868414981,
+        "height": 166.125,
+        "content": "<p style=\"\"><span style=\"font-size: 22px;\">qewobqe</span></p><p style=\"text-align: center;\"><span style=\"font-size: 22px;\">qư<sup>ẹ</sup></span></p><p style=\"\"><span style=\"font-size: 22px;\">qưenoqưneoqưenqưoe</span></p>",
+        "rotate": 54.32071949729889,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false,
+        "fill": "rgb(185, 147, 145)",
+        "outline": {
+          "width": 2,
+          "color": "rgb(255, 101, 2)",
+          "style": "dashed"
+        }
+      },
+      {
+        "type": "text",
+        "id": "IOxBmyn435",
+        "left": 193,
+        "top": 75.60679611650485,
+        "width": 92,
+        "height": 248.78640776699027,
+        "content": "<p style=\"text-align: center;\"><span style=\"font-size: 24px;\"><span style=\"font-family: Arial;\"><span style=\"color: #333;\">kvhxdt</span></span></span></p><p style=\"text-align: center;\"><span style=\"font-size: 24px;\"><span style=\"font-family: Arial;\"><span style=\"color: #333;\">biu</span></span></span></p>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": true,
+        "outline": {
+          "width": 2,
+          "color": "#525252",
+          "style": "solid"
+        }
+      },
+      {
+        "type": "text",
+        "id": "6oF354CBlh",
+        "left": 336.16504237104,
+        "top": 33.879449838187696,
+        "width": 276.0922330097087,
+        "height": 122,
+        "content": "<ul style=\"font-size: 20px;color: #333;\"><li><p style=\"\">yvi</p></li><li><p style=\"\">vy</p></li><li><p style=\"\"><br class=\"ProseMirror-trailingBreak\"></p></li></ul>",
         "rotate": 0,
         "defaultFontName": "Arial",
         "defaultColor": "#333",
@@ -158,13 +228,70 @@
       },
       {
         "type": "text",
-        "id": "9MnI0u-Kti",
-        "left": 716.4239420474154,
-        "top": 41.97006472491909,
-        "width": 202.26537216828476,
-        "height": 150,
-        "content": "<p style=\"\">qewobqe</p><p style=\"\">qưẹ</p><p style=\"\">qưenoqưneoqưenqưoe</p>",
-        "rotate": 54.32071949729889,
+        "id": "Pcbf6SB5qb",
+        "left": 591.0194113030788,
+        "top": 341.32281553398053,
+        "width": 220.4692556634304,
+        "height": 122,
+        "content": "<ol style=\"font-size: 20px;color: #333;\"><li><p style=\"\">yv</p></li><li><p style=\"\">buinio</p></li><li><p style=\"\">ub</p></li></ol>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false
+      },
+      {
+        "type": "text",
+        "id": "eLTuU7rdvb",
+        "left": 121.76374787265813,
+        "top": 262.4393203883495,
+        "width": 177.99352750809058,
+        "height": 120,
+        "content": "<p style=\"\">o bub</p><p style=\"\" data-indent=\"1\">nin</p><p style=\"\">iig</p>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false
+      },
+      {
+        "type": "text",
+        "id": "vB47QFVzak",
+        "left": 538.4304145393247,
+        "top": 33.879449838187696,
+        "width": 121.35922330097085,
+        "height": 50,
+        "content": "<p style=\"\"><code>icvbhk</code></p>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false
+      },
+      {
+        "type": "text",
+        "id": "a15osMe0ya",
+        "left": 806.432032662302,
+        "top": 369.6399676375404,
+        "width": 162.82362459546923,
+        "height": 85,
+        "content": "<blockquote><p style=\"\">bub</p><p style=\"\">n</p></blockquote>",
+        "rotate": 0,
+        "defaultFontName": "Arial",
+        "defaultColor": "#333",
+        "vertical": false,
+        "outline": {
+          "width": 6,
+          "color": "#525252",
+          "style": "solid"
+        }
+      },
+      {
+        "type": "text",
+        "id": "E30rnqZSHs",
+        "left": 12.540446901784359,
+        "top": 34.890776699029125,
+        "width": 116.30258899676375,
+        "height": 60.390625,
+        "content": "<p style=\"\" class=\"\"><span style=\"font-size: 24px;\"><span style=\"color: #ffff3a;\"><span style=\"text-decoration-line: line-through;\">ivu</span><sub><span style=\"text-decoration-line: line-through;\"><span style=\"text-decoration: underline;\">b</span></span></sub><span style=\"text-decoration-line: line-through;\">uiu</span></span></span></p>",
+        "rotate": 0,
         "defaultFontName": "Arial",
         "defaultColor": "#333",
         "vertical": false
