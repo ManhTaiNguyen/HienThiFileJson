@@ -229,7 +229,7 @@ blockquote {
 
 svg {
   overflow: visible;
-  filter: inherit;
+  filter: none;
 }
 
 .svg-line-container {

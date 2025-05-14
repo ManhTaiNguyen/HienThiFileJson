@@ -4,12 +4,18 @@ export function drawShape(element, slide) {
 
     // Thêm shadow nếu có
     if (element.shadow) {
-        shape.classList.add('shape-with-shadow');
         const shadow = element.shadow;
-        shape.style.setProperty('--shadow-h', `${shadow.h || 0}px`);
-        shape.style.setProperty('--shadow-v', `${shadow.v || 0}px`);
+        shape.classList.add('shape-with-shadow');
+        let h = shadow.h || 0;
+        let v = shadow.v || 0;
+
+        if (element.flipH) h = -h;
+        if (element.flipV) v = -v;
+
+        shape.style.setProperty('--shadow-h', `${h}px`);
+        shape.style.setProperty('--shadow-v', `${v}px`);
         shape.style.setProperty('--shadow-blur', `${shadow.blur || 0}px`);
-        shape.style.setProperty('--shadow-color', shadow.color || 'rgba(0,0,0,0.5)');
+        shape.style.setProperty('--shadow-color', `${shadow.color || 'rgba(0,0,0,0.5)'}`);
     }
 
     // Xử lý outline, border

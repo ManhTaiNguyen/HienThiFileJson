@@ -103,15 +103,17 @@ export function drawLine(element, slide) {
     if (element.style) {
         switch(element.style.toLowerCase()) {
             case 'dashed':
-                const dashLength = Math.max(3, element.width || 2) * 3.5;
-                const gapLength = Math.max(2, element.width || 2) * 2.5;
-                line.setAttribute('stroke-dasharray', `${dashLength},${gapLength}`);
-                line.setAttribute('stroke-linecap', 'round');
-                break;
-            case 'custom':
-                if (element.dashArray) {
-                    line.setAttribute('stroke-dasharray', element.dashArray);
-                }
+                const strokeWidth = element.width || 2;
+                
+                const dashLength = strokeWidth * 5.6;  // Dash dài gấp 5 lần độ rộng
+                const gapLength = strokeWidth * 2;   // Gap bằng 2 lần độ rộng
+                
+                const minDash = 6;
+                const minGap = 3;
+                
+                line.setAttribute('stroke-dasharray', 
+                                `${Math.max(dashLength, minDash)},${Math.max(gapLength, minGap)}`);
+                line.setAttribute('stroke-linecap', 'butt');
                 break;
             case 'double':
                 // Tạo hiệu ứng đường kép
