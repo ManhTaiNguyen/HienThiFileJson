@@ -1,27 +1,31 @@
+import { createExerciseBox } from "./createBox.js";
 import { drawLine } from "./line.js";
 import { drawShape } from "./shape.js";
 import { createTextElement } from "./text.js";
 
 let jsonData = [];
 let currentSlideIndex = 0;
+let boxCount = 0;
 
-document.getElementById("json-upload").addEventListener("change", function (event) {
-  const file = event.target.files[0];
-  if (!file) return;
+document
+  .getElementById("json-upload")
+  .addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      jsonData = JSON.parse(e.target.result);
-      currentSlideIndex = 0;
-      renderSlide(jsonData[currentSlideIndex]);
-      updateButtons();
-    } catch (error) {
-      alert("Tệp JSON không hợp lệ!");
-    }
-  };
-  reader.readAsText(file);
-});
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        jsonData = JSON.parse(e.target.result);
+        currentSlideIndex = 0;
+        renderSlide(jsonData[currentSlideIndex]);
+        updateButtons();
+      } catch (error) {
+        alert("Tệp JSON không hợp lệ!");
+      }
+    };
+    reader.readAsText(file);
+  });
 
 document.getElementById("prev-slide").addEventListener("click", function () {
   if (currentSlideIndex > 0) {
@@ -48,7 +52,7 @@ function updateButtons() {
 function renderSlide(slide) {
   const container = document.getElementById("slide-container");
   container.innerHTML = "";
-  
+
   if (slide.background) {
       container.style.backgroundColor = slide.background.color || '#ffffff';
       if (slide.background.image) {
@@ -58,23 +62,34 @@ function renderSlide(slide) {
       }
   }
 
-  if (slide.elements && Array.isArray(slide.elements)) {
-      slide.elements.forEach((element) => {
-          switch (element.type) {
-              case "shape":
-                  drawShape(element, container);
-                  break;
-              case "text":
-                  createTextElement(element, container);
-                  break;
-              case "line":
-                  drawLine(element, container);
-                  break;
-              default:
-                  console.warn("Unknown element type:", element.type);
-          }
-      });
+  let boxContainer = document.getElementById("box_container");
+  if (!boxContainer) {
+    boxContainer = document.createElement("div");
+    boxContainer.id = "box_container";
+    container.appendChild(boxContainer);
+  } else {
+    boxContainer.innerHTML = "";
   }
+
+  slide.elements.forEach((element) => {
+    const div = document.createElement("div");
+    div.classList.add("element");
+    div.style.left = `${element.left}px`;
+    div.style.top = `${element.top}px`;
+
+    if (element.type === "text") {
+    createTextElement(element, container);
+    } else if (element.type === "line") {
+      drawLine(element, container);
+    } else if (element.type === "shape") {
+      drawShape(element, container);
+    } else if (element.type === "exercise") {
+      createExerciseBox(element, boxCount);
+      boxCount++;
+    }
+
+    container.appendChild(div);
+  });
 }
 
 let fullscreen_btn = document.getElementById("fullscreen");

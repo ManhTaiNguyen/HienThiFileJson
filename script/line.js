@@ -1,13 +1,12 @@
-export function drawLine(element, slide) {
+export function drawLine(element, container) {
     const lineContainer = document.createElement('div');
-    lineContainer.className = 'svg-line-container';
     lineContainer.style.position = 'absolute';
     lineContainer.style.left = `${element.left}px`;
     lineContainer.style.top = `${element.top}px`;
     lineContainer.style.width = '100%';
     lineContainer.style.height = '100%';
 
-    // bóng của đường kẻ
+    // Bóng của đường kẻ
     if (element.shadow) {
         lineContainer.style.filter = 'none'; // Reset filter trước
         const shadow = element.shadow;
@@ -18,6 +17,9 @@ export function drawLine(element, slide) {
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
     svg.style.overflow = 'visible';
+    svg.style.position = 'absolute';
+    svg.style.left = '0';
+    svg.style.top = '0';
     
     // Tạo defs cho các marker
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -36,7 +38,7 @@ export function drawLine(element, slide) {
         marker.setAttribute('id', arrowStartMarkerId);
         marker.setAttribute('markerWidth', arrowWidth);
         marker.setAttribute('markerHeight', arrowHeight);
-        marker.setAttribute('refX', arrowWidth * 0.5); // Điều chỉnh vị trí đầu mũi tên
+        marker.setAttribute('refX', arrowWidth * 0.5);
         marker.setAttribute('refY', arrowHeight / 2);
         marker.setAttribute('orient', 'auto-start-reverse');
         marker.setAttribute('markerUnits', 'strokeWidth');
@@ -73,22 +75,20 @@ export function drawLine(element, slide) {
     // Xác định dạng đường kẻ
     let pathData = '';
     if (element.cubic) {
-        pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+        pathData = `M${element.start[0]} ${element.start[1]} 
                 C${element.cubic[0][0]} ${element.cubic[0][1]} 
                 ${element.cubic[1][0]} ${element.cubic[1][1]} 
                 ${element.end[0]} ${element.end[1]}`;
     } else if (element.curve) {
-        pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+        pathData = `M${element.start[0]} ${element.start[1]} 
                 Q${element.curve[0]} ${element.curve[1]} 
                 ${element.end[0]} ${element.end[1]}`;
     } else if (element.broken) {
-        // Đường gấp khúc
-        pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+        pathData = `M${element.start[0]} ${element.start[1]} 
                 L${element.broken[0]} ${element.broken[1]} 
                 L${element.end[0]} ${element.end[1]}`;
     } else {
-        // Đường thẳng
-        pathData = `M${element.start?.[0] || 0} ${element.start?.[1] || 0} 
+        pathData = `M${element.start[0]} ${element.start[1]} 
                 L${element.end[0]} ${element.end[1]}`;
     }
     
@@ -104,10 +104,8 @@ export function drawLine(element, slide) {
         switch(element.style.toLowerCase()) {
             case 'dashed':
                 const strokeWidth = element.width || 2;
-                
-                const dashLength = strokeWidth * 5.6;  // Dash dài gấp 5 lần độ rộng
-                const gapLength = strokeWidth * 2;   // Gap bằng 2 lần độ rộng
-                
+                const dashLength = strokeWidth * 5.6;
+                const gapLength = strokeWidth * 2;
                 const minDash = 6;
                 const minGap = 3;
                 
@@ -116,7 +114,6 @@ export function drawLine(element, slide) {
                 line.setAttribute('stroke-linecap', 'butt');
                 break;
             case 'double':
-                // Tạo hiệu ứng đường kép
                 line.setAttribute('stroke', 'transparent');
                 line.setAttribute('stroke-width', (element.width || 2) * 3);
                 
@@ -144,7 +141,7 @@ export function drawLine(element, slide) {
     }
 
     // Điểm bắt đầu
-    if (element.start && element.points && element.points[0] === 'dot') {
+    if (element.points && element.points[0] === 'dot') {
         const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         startDot.setAttribute('cx', element.start[0]);
         startDot.setAttribute('cy', element.start[1]);
@@ -154,7 +151,7 @@ export function drawLine(element, slide) {
     }
     
     // Điểm kết thúc
-    if (element.end && element.points && element.points[1] === 'dot') {
+    if (element.points && element.points[1] === 'dot') {
         const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         endDot.setAttribute('cx', element.end[0]);
         endDot.setAttribute('cy', element.end[1]);
@@ -175,5 +172,5 @@ export function drawLine(element, slide) {
     
     svg.appendChild(line);
     lineContainer.appendChild(svg);
-    slide.appendChild(lineContainer);
+    container.appendChild(lineContainer);
 }

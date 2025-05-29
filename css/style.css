@@ -10,7 +10,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
 }
 
 p {
@@ -22,7 +21,7 @@ p {
   padding: 10px;
   border: 1px dashed #ccc;
   border-radius: 8px;
-  background-color: f0f8ff;
+  background-color: #f0f8ff;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -78,6 +77,19 @@ p {
   white-space: normal;
   word-wrap: break-word;
   overflow: hidden;
+}
+
+.text-element[style*="outline"] {
+  padding: 2px;
+  border-style: solid;
+}
+
+.text-element blockquote {
+  margin: 0;
+  padding: 10px;
+  font-style: italic;
+  border-left: 4px solid #ddd;
+  background-color: #f9f9f9;
 }
 
 .text-element ul {
@@ -161,6 +173,14 @@ blockquote {
   display: inline-block;
 }
 
+.text-element span[style*="underline"] {
+  text-decoration: underline;
+}
+
+.text-element span[style*="line-through"] {
+  text-decoration: line-through;
+}
+
 .text-align-left {
   text-align: left;
 }
@@ -175,14 +195,63 @@ blockquote {
 
 .text-vertical {
   writing-mode: vertical-rl;
-  text-orientation: upright;
+  text-orientation: mixed;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
+
 .text-element code {
+  font-family: monospace;
   background-color: #f0f0f0;
   padding: 2px 4px;
   border-radius: 3px;
-  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.question {
+  margin-bottom: 10px;
+}
+
+.answer-list {
+  margin-top: 15px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  width: 80%;
+  cursor: pointer;
+  margin: 5px 0;
+}
+
+.text-element ul, 
+.text-element ol {
+  margin: 0;
+  padding-left: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.text-element li {
+  margin: 5px 0;
+}
+
+.font-size-selector {
+  position: absolute;
+  right: 20px;
+  font-size: 16px;
+  padding: 10px;
+}
+
+.font-size-selector:hover {
+  border-color: #ff0000;
 }
 
 .shape-text-container {
@@ -207,6 +276,9 @@ blockquote {
   overflow: hidden;
   box-sizing: border-box;
   padding: 10px;
+  font-family: inherit;
+  color: inherit;
+  overflow: hidden;
 }
 
 .shape-text p {
@@ -221,6 +293,20 @@ blockquote {
 .shape {
   position: absolute;
   overflow: visible;
+  transform-box: fill-box;
+  transform-origin: center center;
+  backface-visibility: visible;
+}
+
+.shape svg {
+  transform-box: fill-box;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.shape.flipped {
+  isolation: isolate;
 }
 
 .shape-with-shadow, .line-with-shadow {
@@ -266,17 +352,6 @@ line, path {
   margin-bottom: 10px;
 }
 
-.box_header {
-  height: 50px;
-  background-color: #e2efff;
-  cursor: move;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .btn-check {
   margin: 0 5px;
   width: 42px;
@@ -286,14 +361,6 @@ line, path {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-}
-
-.answer-list {
-  margin-top: 15px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .answer-item {
@@ -502,9 +569,8 @@ h3 {
 }
 
 @media (max-width: 1100px) {
-  #slide-container {
-    width: 90%;
-    height: calc(90vw * 9 / 16);
+  .element, .text-element, .shape {
+    transform-origin: center center;
   }
 }
 
